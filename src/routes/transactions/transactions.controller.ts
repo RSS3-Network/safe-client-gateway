@@ -38,6 +38,11 @@ import { TransactionsService } from '@/routes/transactions/transactions.service'
 import { DeleteTransactionDto } from '@/routes/transactions/entities/delete-transaction.dto.entity';
 import { ValidationPipe } from '@/validation/pipes/validation.pipe';
 import { DeleteTransactionDtoSchema } from '@/routes/transactions/entities/schemas/delete-transaction.dto.schema';
+import {
+  TransactionDataDto,
+  TransactionDataDtoSchema,
+} from '@/routes/common/entities/transaction-data.dto.entity';
+import { ConfirmationView } from '@/routes/transactions/entities/confirmation-view/confirmation-view.entity';
 
 @ApiTags('transactions')
 @Controller({
@@ -257,6 +262,21 @@ export class TransactionsController {
       chainId,
       safeAddress,
       proposeTransactionDto,
+    });
+  }
+
+  @HttpCode(200)
+  @ApiOkResponse({ type: ConfirmationView })
+  @Post('chains/:chainId/safes/:safeAddress/views/transaction-confirmation')
+  async confirmTransaction(
+    @Param('chainId') chainId: string,
+    @Param('safeAddress') safeAddress: string,
+    @Body(new ValidationPipe(TransactionDataDtoSchema))
+    transactionDataDto: TransactionDataDto,
+  ): Promise<ConfirmationView> {
+    return this.transactionsService.getTransactionConfirmationView({
+      chainId,
+      transactionDataDto,
     });
   }
 }

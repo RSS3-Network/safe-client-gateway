@@ -35,6 +35,10 @@ import { TransactionPreviewMapper } from '@/routes/transactions/mappers/transact
 import { TransactionsHistoryMapper } from '@/routes/transactions/mappers/transactions-history.mapper';
 import { TransferDetailsMapper } from '@/routes/transactions/mappers/transfers/transfer-details.mapper';
 import { TransferMapper } from '@/routes/transactions/mappers/transfers/transfer.mapper';
+import { TransactionDataDto } from '@/routes/common/entities/transaction-data.dto.entity';
+import { DataDecodedRepository } from '@/domain/data-decoder/data-decoded.repository';
+import { IDataDecodedRepository } from '@/domain/data-decoder/data-decoded.repository.interface';
+import { ConfirmationView } from '@/routes/transactions/entities/confirmation-view/confirmation-view.entity';
 
 @Injectable()
 export class TransactionsService {
@@ -49,6 +53,8 @@ export class TransactionsService {
     private readonly moduleTransactionDetailsMapper: ModuleTransactionDetailsMapper,
     private readonly multisigTransactionDetailsMapper: MultisigTransactionDetailsMapper,
     private readonly transferDetailsMapper: TransferDetailsMapper,
+    @Inject(IDataDecodedRepository)
+    private readonly dataDecodedRepository: DataDecodedRepository,
   ) {}
 
   async getById(args: {
@@ -426,6 +432,22 @@ export class TransactionsService {
       domainTransaction,
       safe,
     );
+  }
+
+  async getTransactionConfirmationView(args: {
+    chainId: string;
+    transactionDataDto: TransactionDataDto;
+  }): Promise<ConfirmationView> {
+    const dataDecoded = await this.dataDecodedRepository.getDataDecoded({
+      chainId: args.chainId,
+      data: args.transactionDataDto.data,
+      to: args.transactionDataDto.to,
+    });
+
+    return new ConfirmationView({
+      method: dataDecoded.method,
+      parameters: dataDecoded.parameters,
+    });
   }
 
   /**
